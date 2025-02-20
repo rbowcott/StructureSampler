@@ -4,17 +4,19 @@ import tqdm
 import pickle
 from Reward import log_reward
 from CycleMask import initialise_state, update_state
+from GraphVisualiser import visualise_top_n
 
 '''
--Best way to output results
+Todo: Sort Out Mask
+Todo: Better way to store graphs visited - dictionary? --> Not identifying identical graphs
 '''
 device = T.device('cpu')
 
-vars = ['storm', 'wind', 'rain', 'wet', 'flooding']
+vars = ['Storms', 'Wind', 'Rain', 'Damp', 'Flooding']
 n = len(vars)
 nsq = n**2
 
-#Creating neural net & training parameters
+#Creating network & training parameters
 n_hid = 256
 n_layers = 2
 
@@ -27,17 +29,17 @@ def make_mlp(l, act=T.nn.LeakyReLU(), tail=[]):
         [[T.nn.Linear(i, o)] + ([act] if n < len(l)-2 else [])
          for n, (i, o) in enumerate(zip(l, l[1:]))], []) + tail))
 
-# Initialising values for training
+# Initialising training vals
 Z = T.zeros((1,)).to(device)  
 model = make_mlp([nsq] + [n_hid] * n_layers + [2*nsq+1]).to(device)
 opt = T.optim.Adam([ {'params':model.parameters(), 'lr':0.001}, {'params':[Z], 'lr':0.1} ])
 Z.requires_grad_()
 
-losses = []   #Loss incurred at end of each training run
-zs = []   #Learnt Z values
-all_visited = []   #Records all sampled termination states
+losses = []   
+zs = []   
+all_visited = []   
 
-for it in tqdm.trange(50000):
+for it in tqdm.trange(10000):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   #Adjacency matrices
@@ -55,24 +57,24 @@ for it in tqdm.trange(50000):
        
         pred = model(T.reshape(z[~done], (nd, nsq)).float())
        
-        mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)   #Reshape: [1,2,3,4] <-> [[1,2],[3,4]]
+        mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)  
         logits = (pred[...,:nsq+1] - 1000000000*mask).log_softmax(1)  
 
-        init_edge_mask = T.reshape((z[~done]== 0).float(), (nd, nsq) ) #Same for backwards direction
+        init_edge_mask = T.reshape((z[~done]== 0).float(), (nd, nsq) ) 
         back_logits = ( (0 if uniform_pb else 1)*pred[...,nsq+1:2*nsq+1] - 1000000000*init_edge_mask).log_softmax(1)
 
         if action is not None:   #All but first pass
             ll_diff[~done] -= back_logits.gather(1, action[action!=nsq].unsqueeze(1)).squeeze(1)
 
-        #Sampling action for each element in the batch    
+        #Sampling actions
         exp_weight= 0.
         temp = 1
         sample_ins_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
        
-        action = sample_ins_probs.multinomial(1)    #(nd, 1)
+        action = sample_ins_probs.multinomial(1)    
         ll_diff[~done] += logits.gather(1, action).squeeze(1)
 
-        terminate = (action==nsq).squeeze(1)    #(nd)
+        terminate = (action==nsq).squeeze(1)
 
         for x in z[~done][terminate]:
             all_visited.append(x)
@@ -102,7 +104,5 @@ for it in tqdm.trange(50000):
 
     if it%100==0:
         print('loss =', np.array(losses[-100:]).mean(), 'Z =', Z.item())
-        # emp_dist = np.bincount(all_visited[-50000:], minlength=2**nsq).astype(float)
-        # emp_dist /= emp_dist.sum()
 
-pickle.dump([losses,zs,all_visited], open(f'out.pkl','wb'))
+visualise_top_n(all_visited, 6, vars)
