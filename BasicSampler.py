@@ -37,7 +37,7 @@ losses = []   #Loss incurred at end of each training run
 zs = []   #Learnt Z values
 all_visited = []   #Records all sampled termination states
 
-for it in tqdm.trange(5000):
+for it in tqdm.trange(50000):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   #Adjacency matrices
@@ -75,8 +75,7 @@ for it in tqdm.trange(5000):
         terminate = (action==nsq).squeeze(1)    #(nd)
 
         for x in z[~done][terminate]:
-            graph = (T.reshape(x, (nsq,))*(2**T.arange(nsq))).sum().item()   #Converts to index of all_visited list
-            all_visited.append(graph)
+            all_visited.append(x)
        
         done[~done] |= terminate
         nd = (~done).sum()
@@ -103,7 +102,7 @@ for it in tqdm.trange(5000):
 
     if it%100==0:
         print('loss =', np.array(losses[-100:]).mean(), 'Z =', Z.item())
-        emp_dist = np.bincount(all_visited[-50000:], minlength=2**nsq).astype(float)
-        emp_dist /= emp_dist.sum()
+        # emp_dist = np.bincount(all_visited[-50000:], minlength=2**nsq).astype(float)
+        # emp_dist /= emp_dist.sum()
 
 pickle.dump([losses,zs,all_visited], open(f'out.pkl','wb'))
