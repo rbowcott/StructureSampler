@@ -1,7 +1,6 @@
 import torch as T
 import numpy as np
 import tqdm
-import pickle
 from Reward import log_reward
 from CycleMask import initialise_state, update_state
 from GraphVisualiser import visualise_top_n
@@ -39,7 +38,7 @@ losses = []
 zs = []   
 all_visited = []   
 
-for it in tqdm.trange(10000):
+for it in tqdm.trange(500):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   #Adjacency matrices
@@ -58,10 +57,10 @@ for it in tqdm.trange(10000):
         pred = model(T.reshape(z[~done], (nd, nsq)).float())
        
         mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)  
-        logits = (pred[...,:nsq+1] - 1000000000*mask).log_softmax(1)  
+        logits = (pred[...,:nsq+1] - 100000000*mask).log_softmax(1)  
 
         init_edge_mask = T.reshape((z[~done]== 0).float(), (nd, nsq) ) 
-        back_logits = ( (0 if uniform_pb else 1)*pred[...,nsq+1:2*nsq+1] - 1000000000*init_edge_mask).log_softmax(1)
+        back_logits = ( (0 if uniform_pb else 1)*pred[...,nsq+1:2*nsq+1] - 100000000*init_edge_mask).log_softmax(1)
 
         if action is not None:   #All but first pass
             ll_diff[~done] -= back_logits.gather(1, action[action!=nsq].unsqueeze(1)).squeeze(1)
