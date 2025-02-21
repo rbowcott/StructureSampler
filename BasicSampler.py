@@ -19,7 +19,7 @@ nsq = n**2
 n_hid = 256
 n_layers = 2
 
-bs = 16
+bs = 2
 uniform_pb = True
 var = 1
 
@@ -38,25 +38,25 @@ losses = []
 zs = []   
 all_visited = []   
 
-for it in tqdm.trange(500):
+for it in tqdm.trange(6):
     opt.zero_grad()
    
-    z = T.zeros((bs, n, n), dtype=T.long).to(device)   #Adjacency matrices
-    done = T.full((bs,), False, dtype=T.bool).to(device)   #Stores whether each terminated
+    z = T.zeros((bs, n, n), dtype=T.long).to(device)   
+    done = T.full((bs,), False, dtype=T.bool).to(device)   
        
     action = None
    
-    ll_diff = T.zeros((bs,)).to(device)   #Stores log loss. (Objective is trajectory balance).
+    ll_diff = T.zeros((bs,)).to(device)   
     ll_diff += Z
 
     state = initialise_state(bs, n)
-    nd = bs #Number of incomplete graphs
+    nd = bs 
 
     while T.any(~done):
-       
+
         pred = model(T.reshape(z[~done], (nd, nsq)).float())
        
-        mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)  
+        mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)
         logits = (pred[...,:nsq+1] - 100000000*mask).log_softmax(1)  
 
         init_edge_mask = T.reshape((z[~done]== 0).float(), (nd, nsq) ) 
@@ -70,7 +70,7 @@ for it in tqdm.trange(500):
         temp = 1
         sample_ins_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
        
-        action = sample_ins_probs.multinomial(1)    
+        action = sample_ins_probs.multinomial(1)
         ll_diff[~done] += logits.gather(1, action).squeeze(1)
 
         terminate = (action==nsq).squeeze(1)
@@ -89,6 +89,7 @@ for it in tqdm.trange(500):
         state = update_state(state, z, done, action[~terminate], n)
         lrw = log_reward(z)
     
+    print(z)
     ll_diff -= lrw
 
     loss = (ll_diff**2).sum()/bs
