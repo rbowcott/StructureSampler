@@ -46,9 +46,17 @@ def update_state(state, z, done, actions, n):
     s = T.logical_and(source_rows, target_cols).long()
     print("s:", s)
     t = state['closure_T'][~done].clone().detach()
-    i = T.where(~done)
-    # state['closure_T'][~done].copy_(T.logical_or(t, s))
-    state['closure_T'][i] = T.logical_or(state['closure_T'][i], s)
+    
+    state['closure_T'][0] = T.logical_or(t[0], s[0])
+    print(state['closure_T'])
+
+    state['closure_T'][1] = T.logical_or(t[1], s[1])
+    print(state['closure_T'][1])
+
+    print(state['closure_T'][~done])
+
+    state['closure_T'] = T.cat((state['closure_T'][0], state['closure_T'][1]), dim=0)
+
     print("state['closure_T'][~done]:", state['closure_T'][~done])
     state['closure_T'][done] = T.eye(n, dtype=T.long)
 
