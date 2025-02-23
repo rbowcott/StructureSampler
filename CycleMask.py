@@ -15,10 +15,10 @@ def initialise_state(batch_size, n):
     state['adjacency'] = T.zeros((batch_size, n, n), dtype=T.long)
    
     # Initialize transitive closure of transpose
-    state['closure_T'] = T.eye(n, dtype=T.long).unsqueeze(0).expand_as(state['adjacency'])
+    state['closure_T'] = T.eye(n, dtype=T.long).unsqueeze(0).repeat(batch_size, 1, 1)
    
     # Initialize mask
-    state['mask'] = T.eye(n, dtype = T.long).unsqueeze(0).expand_as(state['adjacency'])
+    state['mask'] = T.eye(n, dtype = T.long).unsqueeze(0).repeat(batch_size, 1, 1)
 
     return state
 
@@ -43,21 +43,7 @@ def update_state(state, z, done, actions, n):
     source_rows = T.gather(state['closure_T'][~done], 1, srcs.unsqueeze(2).expand(-1, -1, state['closure_T'][~done].size(2)))
     target_cols = T.gather(state['closure_T'][~done], 2, targets.unsqueeze(2).expand(-1, state['closure_T'][~done].size(1), -1))
 
-    s = T.logical_and(source_rows, target_cols).long()
-    print("s:", s)
-    t = state['closure_T'][~done].clone().detach()
-    
-    state['closure_T'][0] = T.logical_or(t[0], s[0])
-    print(state['closure_T'])
-
-    state['closure_T'][1] = T.logical_or(t[1], s[1])
-    print(state['closure_T'][1])
-
-    print(state['closure_T'][~done])
-
-    state['closure_T'] = T.cat((state['closure_T'][0], state['closure_T'][1]), dim=0)
-
-    print("state['closure_T'][~done]:", state['closure_T'][~done])
+    state['closure_T'][~done] |= T.logical_and(source_rows, target_cols).long()
     state['closure_T'][done] = T.eye(n, dtype=T.long)
 
     state['mask'] = state['adjacency'] + state['closure_T']

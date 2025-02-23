@@ -1,7 +1,7 @@
 import torch as T
 import numpy as np
 import tqdm
-from Reward import log_reward
+from Reward import all_likelihoods, log_reward
 from CycleMask import initialise_state, update_state
 from GraphVisualiser import visualise_top_n
 
@@ -11,15 +11,16 @@ Todo: Better way to store graphs visited - dictionary? --> Not identifying ident
 '''
 device = T.device('cpu')
 
-vars = ['Storms', 'Wind', 'Rain', 'Damp', 'Flooding']
+vars = ['Food', 'Bell', 'Salivate', 'Hunger']
 n = len(vars)
 nsq = n**2
+probs = all_likelihoods(vars)
 
 #Creating network & training parameters
 n_hid = 256
 n_layers = 2
 
-bs = 2
+bs = 6
 uniform_pb = True
 var = 1
 
@@ -38,7 +39,7 @@ losses = []
 zs = []   
 all_visited = []   
 
-for it in tqdm.trange(6):
+for it in tqdm.trange(5000):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   
@@ -87,9 +88,8 @@ for it in tqdm.trange(6):
             z[~done] += ne.reshape((nd, n, n))
 
         state = update_state(state, z, done, action[~terminate], n)
-        lrw = log_reward(z)
+        lrw = log_reward(z, probs)
     
-    print(z)
     ll_diff -= lrw
 
     loss = (ll_diff**2).sum()/bs
@@ -105,4 +105,5 @@ for it in tqdm.trange(6):
     if it%100==0:
         print('loss =', np.array(losses[-100:]).mean(), 'Z =', Z.item())
 
-visualise_top_n(all_visited, 6, vars)
+#n_graphs should be multiple of 3
+visualise_top_n(all_visited,n_graphs = 6, n_edges = n, labels = vars)
