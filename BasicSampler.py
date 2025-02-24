@@ -11,7 +11,7 @@ Todo: Better way to store graphs visited - dictionary? --> Not identifying ident
 '''
 device = T.device('cpu')
 
-vars = ['Food', 'Bell', 'Salivate', 'Hunger']
+vars = ['Rain', 'Storm', 'Flooding', 'Lightning']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
@@ -39,7 +39,7 @@ losses = []
 zs = []   
 all_visited = []   
 
-for it in tqdm.trange(5000):
+for it in tqdm.trange(10000):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   
