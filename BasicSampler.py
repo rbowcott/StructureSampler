@@ -5,16 +5,13 @@ from Reward import all_likelihoods, log_reward
 from CycleMask import initialise_state, update_state
 from GraphVisualiser import visualise_top_n
 
-'''
-Todo: Sort Out Mask
-Todo: Better way to store graphs visited - dictionary? --> Not identifying identical graphs
-'''
-device = T.device('cpu')
+device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
-vars = ['Rain', 'Storm', 'Flooding', 'Lightning', 'Sharks']
+vars = ['Smoking', 'Cancer', 'Drinking', 'Exercise']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
+print(probs[0])
 
 #Creating network & training parameters
 n_hid = 256
@@ -37,9 +34,10 @@ Z.requires_grad_()
 
 losses = []   
 zs = []   
-all_visited = []   
+all_visited = []
+its = 25000   
 
-for it in tqdm.trange(5000):
+for it in tqdm.trange(its):
     opt.zero_grad()
    
     z = T.zeros((bs, n, n), dtype=T.long).to(device)   
@@ -68,7 +66,7 @@ for it in tqdm.trange(5000):
 
         #Sampling actions
         exp_weight= 0.
-        temp = 1
+        temp = 1.2
         sample_ins_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
        
         action = sample_ins_probs.multinomial(1)
@@ -105,5 +103,11 @@ for it in tqdm.trange(5000):
     if it%100==0:
         print('loss =', np.array(losses[-100:]).mean(), 'Z =', Z.item())
 
-#n_graphs should be multiple of 3
-visualise_top_n(all_visited,n_graphs = 6, n_edges = n, labels = vars)
+# Saving model
+T.save({
+    'model_state_dict': model.state_dict(),
+    'Z': Z.item(),
+    'n_hid': n_hid,
+    'n_layers': n_layers,
+    'vars': vars
+}, 'basicsampler.pt')

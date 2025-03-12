@@ -3,15 +3,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 from collections import Counter
 
-def visualise_top_n(all_visited, n_graphs, n_edges, labels):
+def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
     state_counts = Counter(tuple(map(tuple, g.tolist())) for g in all_visited)
     top_n_states = state_counts.most_common(n_graphs)
 
-    fig, ax = plt.subplots(n_graphs//3, 3, figsize=(30, 20))
+    fig, ax = plt.subplots(n_graphs//3, 3, figsize=(30, 3 * n_graphs))
     axes = ax.flat
 
     for i in range(n_graphs):
         state, visits = top_n_states[i]
+        empirical_likelihood = visits / its
         state = np.array(state)
 
         G = nx.from_numpy_array(state, create_using=nx.DiGraph) 
@@ -28,7 +29,8 @@ def visualise_top_n(all_visited, n_graphs, n_edges, labels):
                 arrowsize=75,
                 ax = axes[i])
         
-        axes[i].set_title(f'Visits: {visits}')
+        if true_likelihood is not None:
+            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood} \n True Likelihood: {true_likelihood[state]}')
 
     for a in axes:
         a.margins(0.2)

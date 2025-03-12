@@ -40,10 +40,8 @@ class LMReward:
         with torch.no_grad():
             outputs = self.model(**inputs)
 
-        #Remove prediction after <|endoftext|>  
         logits = outputs.logits[:, :-1, :]
        
-        #Shift labels & mask to the left to correspond to predictions
         labels = inputs['input_ids'][:, 1:]
         attention_masks = inputs['attention_mask'][:, 1:]  
        
