@@ -3,6 +3,7 @@ import tqdm
 from Reward import all_likelihoods
 from CycleMask import initialise_state, update_state
 from GraphVisualiser import visualise_top_n
+from TrueLikelihoods import calculate_true_likelihoods
 
 device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
@@ -77,9 +78,12 @@ model.eval()
 # Calculate probabilities for reward computation
 probs = all_likelihoods(vars)
 
+#Calculate true likelihoods of graphs under language model
+tls = calculate_true_likelihoods(vars, probs)
+
 # Sample graphs
 n_samples = 25000 
 samples = sample_graphs(model, n_samples, vars, device)
 
 # Visualize top samples
-visualise_top_n(samples, n_graphs = 12, labels = vars, its = n_samples)
+visualise_top_n(samples, n_graphs = 12, labels = vars, its = n_samples, true_likelihood=tls)

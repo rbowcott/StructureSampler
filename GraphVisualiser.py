@@ -14,6 +14,7 @@ def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
         state, visits = top_n_states[i]
         empirical_likelihood = visits / its
         state = np.array(state)
+        idx = int("".join(map(str,state.flatten())), 2)
 
         G = nx.from_numpy_array(state, create_using=nx.DiGraph) 
 
@@ -30,7 +31,9 @@ def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
                 ax = axes[i])
         
         if true_likelihood is not None:
-            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood} \n True Likelihood: {true_likelihood[state]}')
+            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood} \n True Likelihood: {true_likelihood[idx]}')
+        else:
+            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood}')
 
     for a in axes:
         a.margins(0.2)
