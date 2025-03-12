@@ -62,7 +62,8 @@ def sample_graphs(model, n_samples, vars, device):
 # Extract model parameters
 n_hid = sampler.get('n_hid')  
 n_layers = sampler.get('n_layers')  
-vars = sampler.get('vars') 
+vars = sampler.get('vars')
+probs = sampler.get('probs')
 
 # Recreate model architecture
 n = len(vars)
@@ -75,14 +76,11 @@ model.load_state_dict(sampler['model_state_dict'])
 # Set model to evaluation mode
 model.eval()
 
-# Calculate probabilities for reward computation
-probs = all_likelihoods(vars)
-
 #Calculate true likelihoods of graphs under language model
 tls = calculate_true_likelihoods(vars, probs)
 
 # Sample graphs
-n_samples = 25000 
+n_samples = 25 
 samples = sample_graphs(model, n_samples, vars, device)
 
 # Visualize top samples

@@ -11,7 +11,6 @@ vars = ['Smoking', 'Cancer', 'Drinking', 'Exercise']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
-print(probs[0])
 
 #Creating network & training parameters
 n_hid = 256
@@ -109,5 +108,6 @@ T.save({
     'Z': Z.item(),
     'n_hid': n_hid,
     'n_layers': n_layers,
-    'vars': vars
+    'vars': vars,
+    'probs' : probs
 }, 'basicsampler.pt')

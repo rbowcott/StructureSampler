@@ -31,7 +31,7 @@ def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
                 ax = axes[i])
         
         if true_likelihood is not None:
-            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood} \n True Likelihood: {true_likelihood[idx]}')
+            axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood} \n True Likelihood: {true_likelihood[idx].squeeze(0):4f}')
         else:
             axes[i].set_title(f'Visits: {visits} \n Empirical Likelihood: {empirical_likelihood}')
 
