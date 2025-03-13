@@ -80,8 +80,8 @@ model.eval()
 tls = calculate_true_likelihoods(vars, probs)
 
 # Sample graphs
-n_samples = 25 
+n_samples = 25000 
 samples = sample_graphs(model, n_samples, vars, device)
 
 # Visualize top samples
-visualise_top_n(samples, n_graphs = 12, labels = vars, its = n_samples, true_likelihood=tls)
+visualise_top_n(samples, n_graphs = 6, labels = vars, its = n_samples, true_likelihood=tls)

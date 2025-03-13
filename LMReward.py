@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class LMReward:
 
-    def __init__(self, model = "gpt2"):
+    def __init__(self, model = 'gpt2'):
         self.model = AutoModelForCausalLM.from_pretrained(model)
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -47,6 +47,6 @@ class LMReward:
        
         log_probs = F.log_softmax(logits, dim=-1)
         labels_log_probs = log_probs.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
-        str_log_probs = (attention_masks * labels_log_probs).mean(dim = 1)
+        str_log_probs = (attention_masks * labels_log_probs).sum(dim=1) / attention_masks.sum(dim=1)
                
         return str_log_probs

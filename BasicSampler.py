@@ -3,11 +3,10 @@ import numpy as np
 import tqdm
 from Reward import all_likelihoods, log_reward
 from CycleMask import initialise_state, update_state
-from GraphVisualiser import visualise_top_n
 
 device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
-vars = ['Smoking', 'Cancer', 'Drinking', 'Exercise']
+vars = ['Lightning', 'Thunder', 'Bananas']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
@@ -16,7 +15,7 @@ probs = all_likelihoods(vars)
 n_hid = 256
 n_layers = 2
 
-bs = 6
+bs = 16
 uniform_pb = True
 var = 1
 
@@ -34,7 +33,7 @@ Z.requires_grad_()
 losses = []   
 zs = []   
 all_visited = []
-its = 25000   
+its = 20000   
 
 for it in tqdm.trange(its):
     opt.zero_grad()
@@ -64,8 +63,8 @@ for it in tqdm.trange(its):
             ll_diff[~done] -= back_logits.gather(1, action[action!=nsq].unsqueeze(1)).squeeze(1)
 
         #Sampling actions
-        exp_weight= 0.
-        temp = 1.2
+        exp_weight= 0.05
+        temp = 1.
         sample_ins_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
        
         action = sample_ins_probs.multinomial(1)

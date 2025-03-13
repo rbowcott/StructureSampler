@@ -12,17 +12,17 @@ def all_likelihoods(vars):
         for j in range(n):
             relation = f'{pad} {vars[i]} causes {vars[j]}'
             unrelated = f'{pad} {vars[i]} and {vars[j]} are not causally linked'
-            links_unnorm[i, j] = lmreward.str_loglikelihood(relation)
-            not_linked_unnorm[i,j] = lmreward.str_loglikelihood(unrelated)
+            links_unnorm[i, j] = lmreward.str_avgloglikelihood(relation)
+            not_linked_unnorm[i,j] = lmreward.str_avgloglikelihood(unrelated)
     
-    links = links_unnorm / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
-    not_linked = 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)) / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
-    return (links, not_linked)
+    # links = links_unnorm / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
+    # not_linked = 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)) / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
+    return (links_unnorm, not_linked_unnorm)
 
-def log_reward(adj, str_probs):
+def log_reward(adj, str_logprobs):
     #Given adjacency matrix and dictionary, finds log likelihood of the causal graph
     bs, nodes, _ = adj.shape
-    links, not_linked = str_probs
+    links, not_linked = str_logprobs
 
     adj_t = T.transpose(adj, 1, 2)
     id = T.eye(nodes, device = adj.device, dtype= T.long).unsqueeze(0).expand(bs, -1, -1)

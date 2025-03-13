@@ -8,6 +8,9 @@ def calculate_true_likelihoods(vars, probs):
     nsq = len(vars)**2
 
     all_rewards = []
+
+    print('Calculating all graph likelihoods under reward')
+
     for i in tqdm.trange(2**nsq):
         in_bin = bin(i)[2:].zfill(nsq)
         as_adj = T.tensor([int(bit) for bit in in_bin], dtype = T.long).reshape((n,n))
@@ -24,4 +27,5 @@ def calculate_true_likelihoods(vars, probs):
 
     rel_likelihoods = all_rewards / all_rewards.sum(dim= 0)
 
+    print('Computed all likelihoods')
     return rel_likelihoods
