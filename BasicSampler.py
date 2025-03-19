@@ -32,8 +32,7 @@ Z.requires_grad_()
 
 losses = []   
 zs = []   
-all_visited = []
-its = 20000   
+its = 10000   
 
 for it in tqdm.trange(its):
     opt.zero_grad()
@@ -63,17 +62,14 @@ for it in tqdm.trange(its):
             ll_diff[~done] -= back_logits.gather(1, action[action!=nsq].unsqueeze(1)).squeeze(1)
 
         #Sampling actions
-        exp_weight= 0.05
+        exp_weight= 0.3
         temp = 1.
-        sample_ins_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
+        sample_probs = (1-exp_weight)*(logits/temp).softmax(1) + exp_weight*(1-mask) / (1-mask+0.0000001).sum(1).unsqueeze(1)
        
-        action = sample_ins_probs.multinomial(1)
+        action = sample_probs.multinomial(1)
         ll_diff[~done] += logits.gather(1, action).squeeze(1)
 
         terminate = (action==nsq).squeeze(1)
-
-        for x in z[~done][terminate]:
-            all_visited.append(x)
        
         done[~done] |= terminate
         nd = (~done).sum()
@@ -101,7 +97,6 @@ for it in tqdm.trange(its):
     if it%100==0:
         print('loss =', np.array(losses[-100:]).mean(), 'Z =', Z.item())
 
-# Saving model
 T.save({
     'model_state_dict': model.state_dict(),
     'Z': Z.item(),

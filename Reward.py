@@ -15,9 +15,9 @@ def all_likelihoods(vars):
             links_unnorm[i, j] = lmreward.str_avgloglikelihood(relation)
             not_linked_unnorm[i,j] = lmreward.str_avgloglikelihood(unrelated)
     
-    # links = links_unnorm / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
-    # not_linked = 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)) / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
-    return (links_unnorm, not_linked_unnorm)
+    links = links_unnorm / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
+    not_linked = 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)) / (links_unnorm + T.t(links_unnorm) + 0.5 * (not_linked_unnorm + T.t(not_linked_unnorm)))
+    return (-links, -not_linked)
 
 def log_reward(adj, str_logprobs):
     #Given adjacency matrix and dictionary, finds log likelihood of the causal graph

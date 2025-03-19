@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from collections import Counter
 
-def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
+def visualise_top_n(all_visited, n_graphs, labels, n_samples, true_likelihood = None):
     state_counts = Counter(tuple(map(tuple, g.tolist())) for g in all_visited)
     top_n_states = state_counts.most_common(n_graphs)
 
@@ -12,7 +12,7 @@ def visualise_top_n(all_visited, n_graphs, labels, its, true_likelihood = None):
 
     for i in range(n_graphs):
         state, visits = top_n_states[i]
-        empirical_likelihood = visits / its
+        empirical_likelihood = visits / n_samples
         state = np.array(state)
         idx = int("".join(map(str,state.flatten())), 2)
 

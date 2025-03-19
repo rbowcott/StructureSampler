@@ -14,48 +14,44 @@ def make_mlp(l, act=T.nn.LeakyReLU(), tail=[]):
         [[T.nn.Linear(i, o)] + ([act] if n < len(l)-2 else [])
          for n, (i, o) in enumerate(zip(l, l[1:]))], []) + tail))
 
-def sample_graphs(model, n_samples, vars, device):
+def sample_graphs(model, its, vars, device, bs=16):
     n = len(vars)
     nsq = n**2
     
     all_samples = []
     
-    for it in tqdm.trange(n_samples):
+    for it in tqdm.trange(its):
         # Initialize graph adjacency matrix
-        z = T.zeros((1, n, n), dtype=T.long).to(device)
-        done = T.full((1,), False, dtype=T.bool).to(device)
+        z = T.zeros((bs, n, n), dtype=T.long).to(device)
+        done = T.full((bs,), False, dtype=T.bool).to(device)
         
         # Initialize state
-        state = initialise_state(1, n)
+        state = initialise_state(bs, n)
+        nd = bs
         
-        while not done.item():
-            # Forward pass through the model
-            pred = model(T.reshape(z, (1, nsq)).float())
+        while T.any(~done):
+            pred = model(T.reshape(z[~done], (nd, nsq)).float())
             
-            # Create mask for valid actions
-            mask = T.cat([T.reshape(state['mask'], (1, nsq)), T.zeros((1, 1), device=device)], 1)
-            logits = (pred[...,:nsq+1] - 100000000*mask).log_softmax(1)
+            mask = T.cat([ T.reshape(state['mask'][~done], (nd, nsq)), T.zeros((nd, 1), device = device)], 1)
+            logits = (pred[...,:nsq+1] - 100000000*mask).log_softmax(1)  
             
             # Sample action based on logits
             probs = logits.softmax(1)
             action = probs.multinomial(1)
+
+            terminate = (action==nsq).squeeze(1)               
+            for x in z[~done][terminate]:
+                all_samples.append(x)
+
+            done[~done] |= terminate
+            nd = (~done).sum()
             
-            # Check if terminated
-            terminate = (action == nsq).item()
-            
-            if terminate:
-                done[0] = True
-            else:
-                # Update graph with new edge
-                action_idx = action.item()
-                i, j = action_idx // n, action_idx % n
-                z[0, i, j] = 1
-                
-                # Update state
-                state = update_state(state, z, done, action, n)
-        
-        # Add completed graph to samples
-        all_samples.append(z[0].cpu().numpy())
+            with T.no_grad():
+                #New edges added for each graph
+                ne = T.zeros((nd, nsq), dtype = T.long).scatter_add(1, action[~terminate], T.ones(action[~terminate].shape, dtype=T.long, device=device))
+                z[~done] += ne.reshape((nd, n, n))
+
+            state = update_state(state, z, done, action[~terminate], n)
         
     return all_samples
 
@@ -80,8 +76,9 @@ model.eval()
 tls = calculate_true_likelihoods(vars, probs)
 
 # Sample graphs
-n_samples = 25000 
-samples = sample_graphs(model, n_samples, vars, device)
+its = 25000 
+bs = 16
+samples = sample_graphs(model, its, vars, device)
 
 # Visualize top samples
-visualise_top_n(samples, n_graphs = 6, labels = vars, its = n_samples, true_likelihood=tls)
+visualise_top_n(samples, n_graphs = 24, labels = vars, n_samples= its * bs, true_likelihood=tls)
