@@ -35,6 +35,12 @@ class LMReward:
     def str_avgloglikelihood(self, string):
 
         inputs = self.tokenizer(string, return_tensors="pt", padding = True)
+
+        # Print the tokens
+        tokens = inputs['input_ids'][0].tolist()
+        decoded_tokens = [self.tokenizer.decode([token]) for token in tokens]
+        print("Decoded tokens:", decoded_tokens)
+
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
        
         with torch.no_grad():

@@ -6,7 +6,7 @@ from CycleMask import initialise_state, update_state
 
 device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
-vars = ['Lightning', 'Thunder', 'Bananas']
+vars = ['lightning', 'thunder', 'bananas']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
@@ -32,7 +32,7 @@ Z.requires_grad_()
 
 losses = []   
 zs = []   
-its = 10000   
+its = 5000   
 
 for it in tqdm.trange(its):
     opt.zero_grad()
