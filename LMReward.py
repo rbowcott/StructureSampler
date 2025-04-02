@@ -1,11 +1,14 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Gemma3ForCausalLM
 import torch
 import torch.nn.functional as F
 
 class LMReward:
 
-    def __init__(self, model = 'gpt2'):
-        self.model = AutoModelForCausalLM.from_pretrained(model)
+    def __init__(self, model = 'google/gemma-3-1b-it'):
+        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+
+        self.model = Gemma3ForCausalLM.from_pretrained(model, quantization_config=quantization_config).eval()
+        # self.model = AutoModelForCausalLM.from_pretrained(model, load_in_8bit=True, device_map="auto", torch_dtype=torch.float16)
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
