@@ -5,28 +5,26 @@ lmreward = LMReward()
 pad = lmreward.tokenizer.eos_token
 
 def all_likelihoods(vars):
-# Have not permuted the initial list here - still to do.
-# Normalise just between yes and no for (i, j). Now normalising between (i,j) and (j,i), too.
 
     n = len(vars)
-    starter = f'{pad} Consider {n} objects: '
-    for v in vars[:-1]:
-        starter += f'{v}, '
-    starter += f'{vars[-1]}.'
-    
-    yes = T.zeros((n,n))
+    starter = 'Which is true:'
+
+    ab = T.zeros((n, n))
+    ba = T.zeros((n, n))
     no = T.zeros((n, n))
 
     for i in range(n):
         for j in range(n):
-            question = f' Does {vars[i]} cause {vars[j]}? '
-            yes[i,j] = lmreward.str_loglikelihood(starter, question + 'Yes.')
-            no[i,j] = lmreward.str_loglikelihood(starter, question + 'No.')
+            starter += f'1 {vars[i]} causes {vars[j]}, 2 {vars[j]} causes {vars[i]}, 3 there is no causal link.'
+            ab[i,j], ba[i,j], no[i,j] = lmreward.str_loglikelihood(starter, [' 1.', ' 2.', ' 3.'])
 
-    yesnorm = yes / (yes + T.t(yes) + no + T.t(no))
-    nonorm = no / (yes + T.t(yes) + no + T.t(no))
+    yes = (ab + T.t(ba)) / 2
+    no = (no + T.t(no)) / 2
 
-    return (-yesnorm, -nonorm)
+    yes -= T.min(yes)
+    no -= T.min(no)
+
+    return yes, no
 
 def log_reward(adj, str_logprobs):
     #Given adjacency matrix and dictionary, finds log likelihood of the causal graph

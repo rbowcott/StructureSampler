@@ -76,7 +76,7 @@ model.eval()
 tls = calculate_true_likelihoods(vars, probs)
 
 # Sample graphs
-its = 25000 
+its = 10000
 bs = 16
 samples = sample_graphs(model, its, vars, device)
 

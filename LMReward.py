@@ -17,8 +17,8 @@ class LMReward:
         str1_tokens = self.tokenizer(str1, return_tensors="pt", padding=True)    
         str1_length = str1_tokens['input_ids'].shape[1]    
 
-        string = str1 + str2
-        inputs = self.tokenizer(string, return_tensors="pt", padding=True)
+        strings = [str1 + str for str in str2]
+        inputs = self.tokenizer(strings, return_tensors="pt", padding=True)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
        
         with T.no_grad():

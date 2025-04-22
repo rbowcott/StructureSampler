@@ -32,7 +32,7 @@ Z.requires_grad_()
 
 losses = []   
 zs = []   
-its = 10000   
+its = 1000
 
 for it in tqdm.trange(its):
     opt.zero_grad()
