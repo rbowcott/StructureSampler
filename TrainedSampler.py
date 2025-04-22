@@ -81,4 +81,4 @@ bs = 16
 samples = sample_graphs(model, its, vars, device)
 
 # Visualize top samples
-visualise_top_n(samples, n_graphs = 24, labels = vars, n_samples= its * bs, true_likelihood=tls)
+visualise_top_n(samples, n_graphs = 3, labels = vars, n_samples= its * bs, true_likelihood=tls)

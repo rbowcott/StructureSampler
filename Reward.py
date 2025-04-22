@@ -1,30 +1,29 @@
 import torch as T
+import torch.nn.functional as F
 from LMReward import LMReward
 
 lmreward = LMReward()
 pad = lmreward.tokenizer.eos_token
 
 def all_likelihoods(vars):
-
     n = len(vars)
-    starter = 'Which is true:'
-
-    ab = T.zeros((n, n))
-    ba = T.zeros((n, n))
-    no = T.zeros((n, n))
+    starter = f'{pad} Rains cause flooding. Smoking causes cancer. Consider '
+    for v in vars[:-1]:
+        starter += f'{v}, '
+    starter += f' and {vars[-1]}.'
+    
+    likelihoods = T.zeros((n, n, 2))
 
     for i in range(n):
         for j in range(n):
-            starter += f'1 {vars[i]} causes {vars[j]}, 2 {vars[j]} causes {vars[i]}, 3 there is no causal link.'
-            ab[i,j], ba[i,j], no[i,j] = lmreward.str_loglikelihood(starter, [' 1.', ' 2.', ' 3.'])
+            question = f' Does {vars[i]} cause {vars[j]}? '
+            likelihoods[i, j] = lmreward.str_loglikelihood(starter + question, [f' Yes', f' No'])
 
-    yes = (ab + T.t(ba)) / 2
-    no = (no + T.t(no)) / 2
+    normalised = F.log_softmax(likelihoods, dim=-1)
+    yes = normalised[:, :, 0]
+    no = normalised[:, :, 1]
 
-    yes -= T.min(yes)
-    no -= T.min(no)
-
-    return yes, no
+    return (yes, no)
 
 def log_reward(adj, str_logprobs):
     #Given adjacency matrix and dictionary, finds log likelihood of the causal graph
