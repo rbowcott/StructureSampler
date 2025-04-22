@@ -13,7 +13,6 @@ class LMReward:
 
     def str_loglikelihood(self, str1, str2):
 
-        #Tokenizing first half to define boundary
         str1_tokens = self.tokenizer(str1, return_tensors="pt", padding=True)    
         str1_length = str1_tokens['input_ids'].shape[1]    
 
