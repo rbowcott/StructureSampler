@@ -19,9 +19,12 @@ def all_likelihoods(vars):
             question = f' Does {vars[i]} cause {vars[j]}? '
             likelihoods[i, j] = lmreward.str_loglikelihood(starter + question, [f' Yes', f' No'])
 
-    normalised = F.log_softmax(likelihoods, dim=-1)
-    yes = normalised[:, :, 0]
-    no = normalised[:, :, 1]
+    # normalised = F.log_softmax(likelihoods, dim=-1)
+    # yes = normalised[:, :, 0]
+    # no = normalised[:, :, 1]
+
+    yes = likelihoods[:, :, 0] / (likelihoods[:, :, 0] + likelihoods[:, :, 1])
+    no = likelihoods[:, :, 1] / (likelihoods[:, :, 0] + likelihoods[:, :, 1])
 
     return (yes, no)
 

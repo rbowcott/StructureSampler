@@ -6,7 +6,7 @@ from CycleMask import initialise_state, update_state
 
 device = T.device('cuda' if T.cuda.is_available() else 'cpu')
 
-vars = [ 'lightning', 'thunder']
+vars = [ 'lightning', 'thunder', 'bananas']
 n = len(vars)
 nsq = n**2
 probs = all_likelihoods(vars)
