@@ -18,6 +18,10 @@ class LMReward:
 
         strings = [str1 + str for str in str2]
         inputs = self.tokenizer(strings, return_tensors="pt", padding=True)
+
+        # for i, input_ids in enumerate(inputs['input_ids']):
+        #     print(f'Tokenized String: {self.tokenizer.convert_ids_to_tokens(input_ids, skip_special_tokens=False)}')
+
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
        
         with T.no_grad():

@@ -7,17 +7,21 @@ pad = lmreward.tokenizer.eos_token
 
 def all_likelihoods(vars):
     n = len(vars)
-    starter = f'{pad} Rains cause flooding. Smoking causes cancer. Consider '
-    for v in vars[:-1]:
-        starter += f'{v}, '
-    starter += f' and {vars[-1]}.'
+    starter = f'{pad} Rains cause Flooding. Smoking causes Cancer.'
+    
+    # for v in vars[:-1]:
+    #     starter += f'{v}, '
+    # starter += f' and {vars[-1]}.'
     
     likelihoods = T.zeros((n, n, 2))
 
+    # Thought this might better capture likelihood than 'Does {i} cause {j}? Y/N'
     for i in range(n):
         for j in range(n):
-            question = f' Does {vars[i]} cause {vars[j]}? '
-            likelihoods[i, j] = lmreward.str_loglikelihood(starter + question, [f' Yes', f' No'])
+            question = f' Does {vars[i]} cause {vars[j]}?'
+            s1 = ' Yes.'
+            s2 = ' No.'
+            likelihoods[i, j] = lmreward.str_loglikelihood(starter + question, [s1, s2])
 
     # normalised = F.log_softmax(likelihoods, dim=-1)
     # yes = normalised[:, :, 0]
@@ -26,7 +30,7 @@ def all_likelihoods(vars):
     yes = likelihoods[:, :, 0] / (likelihoods[:, :, 0] + likelihoods[:, :, 1])
     no = likelihoods[:, :, 1] / (likelihoods[:, :, 0] + likelihoods[:, :, 1])
 
-    return (yes, no)
+    return (-yes, -no)
 
 def log_reward(adj, str_logprobs):
     #Given adjacency matrix and dictionary, finds log likelihood of the causal graph
