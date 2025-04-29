@@ -1,4 +1,5 @@
 import torch as T
+import torch.nn.functional as F
 import networkx as nx
 import tqdm
 from Reward import log_reward
@@ -21,7 +22,6 @@ def calculate_true_likelihoods(vars, probs):
 
         reward *= is_dag
         all_rewards.append(reward)
-
 
     all_rewards = T.stack(all_rewards, dim= 0)
 
